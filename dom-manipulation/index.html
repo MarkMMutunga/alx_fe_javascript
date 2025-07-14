@@ -85,13 +85,31 @@
     .category-filter {
       text-align: center;
       margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .category-filter label {
+      font-weight: bold;
+      color: #333;
     }
     
     select {
-      padding: 8px;
+      padding: 8px 12px;
       border-radius: 5px;
       border: 1px solid #ddd;
       margin: 0 10px;
+      font-size: 1em;
+      background-color: white;
+      min-width: 150px;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
     }
     
     .storage-info {
@@ -110,7 +128,7 @@
   
   <div class="category-filter">
     <label for="categoryFilter">Filter by category:</label>
-    <select id="categoryFilter">
+    <select id="categoryFilter" onchange="filterQuotes()">
       <option value="all">All Categories</option>
     </select>
   </div>

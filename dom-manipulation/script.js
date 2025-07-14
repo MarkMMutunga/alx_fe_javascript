@@ -50,8 +50,9 @@ let currentFormVisible = false;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-  populateCategoryFilter();
+  populateCategories();
   setupEventListeners();
+  loadLastSelectedFilter();
   loadLastViewedQuote();
   showRandomQuote();
 });
@@ -79,6 +80,17 @@ function showRandomQuote() {
   
   // Save the last viewed quote to session storage
   saveLastViewedQuote(randomQuote);
+}
+
+// Function to filter quotes based on selected category
+function filterQuotes() {
+  const selectedCategory = categoryFilter.value;
+  
+  // Save the selected filter to localStorage
+  saveLastSelectedFilter(selectedCategory);
+  
+  // Display a random quote from the selected category
+  showRandomQuote();
 }
 
 // Function to display a quote with animation
@@ -241,11 +253,11 @@ function addQuote() {
   // Add to quotes array
   quotes.push(newQuote);
   
-  // Save quotes to localStorage
+  // Save to localStorage
   saveQuotes();
   
-  // Update category filter
-  populateCategoryFilter();
+  // Update category filter with new categories
+  populateCategories();
   
   // Show success message
   showSuccessMessage('Quote added successfully!');
@@ -307,6 +319,9 @@ function populateCategoryFilter() {
   const categories = [...new Set(quotes.map(quote => quote.category))];
   categories.sort();
   
+  // Save current selection
+  const currentSelection = categoryFilter.value;
+  
   // Clear existing options (except "All Categories")
   categoryFilter.innerHTML = '<option value="all">All Categories</option>';
   
@@ -317,6 +332,16 @@ function populateCategoryFilter() {
     option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
     categoryFilter.appendChild(option);
   });
+  
+  // Restore selection if it still exists
+  if (categories.includes(currentSelection)) {
+    categoryFilter.value = currentSelection;
+  }
+}
+
+// Function to populate categories (required by task)
+function populateCategories() {
+  populateCategoryFilter();
 }
 
 // Function to setup event listeners
@@ -327,8 +352,8 @@ function setupEventListeners() {
   // Toggle form button
   toggleFormBtn.addEventListener('click', createAddQuoteForm);
   
-  // Category filter change
-  categoryFilter.addEventListener('change', showRandomQuote);
+  // Category filter change - remove this since we're using onchange in HTML
+  // categoryFilter.addEventListener('change', showRandomQuote);
   
   // Export button
   if (exportBtn) {
@@ -425,6 +450,32 @@ function loadLastViewedQuote() {
   return false;
 }
 
+// Function to save the last selected filter
+function saveLastSelectedFilter(category) {
+  try {
+    localStorage.setItem('lastSelectedFilter', category);
+  } catch (error) {
+    console.error('Error saving last selected filter to localStorage:', error);
+  }
+}
+
+// Function to load the last selected filter
+function loadLastSelectedFilter() {
+  try {
+    const lastFilter = localStorage.getItem('lastSelectedFilter');
+    if (lastFilter && categoryFilter) {
+      // Set the filter after a short delay to ensure options are populated
+      setTimeout(() => {
+        if (lastFilter === 'all' || Array.from(categoryFilter.options).some(option => option.value === lastFilter)) {
+          categoryFilter.value = lastFilter;
+        }
+      }, 100);
+    }
+  } catch (error) {
+    console.error('Error loading last selected filter from localStorage:', error);
+  }
+}
+
 // JSON Import/Export Functions
 function exportToJsonFile() {
   try {
@@ -486,8 +537,8 @@ function importFromJsonFile(event) {
       // Save to localStorage
       saveQuotes();
       
-      // Update UI
-      populateCategoryFilter();
+      // Update UI with new categories
+      populateCategories();
       
       // Clear the file input
       event.target.value = '';
