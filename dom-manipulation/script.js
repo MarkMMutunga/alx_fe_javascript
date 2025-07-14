@@ -716,6 +716,7 @@ async function performServerSync() {
       updateSyncStatus('conflict');
     } else {
       updateSyncStatus('success');
+      showSuccessMessage('Quotes synced with server!');
       console.log('Sync completed successfully');
     }
     
@@ -896,6 +897,11 @@ async function manualSync() {
   
   showSuccessMessage('Starting manual sync...');
   await performServerSync();
+  
+  // Additional success message for manual sync
+  if (!syncInProgress) {
+    showSuccessMessage('Quotes synced with server!');
+  }
 }
 
 // Push local changes to server (simulation)
