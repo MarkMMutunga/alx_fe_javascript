@@ -735,7 +735,7 @@ async function fetchServerData() {
   try {
     // Using JSONPlaceholder as a mock server
     // We'll simulate server quotes by fetching posts and converting them
-    const response = await fetch(`${SERVER_CONFIG.baseUrl}/posts?_limit=5`);
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=5');
     const posts = await response.json();
     
     // Convert posts to quote format for simulation
@@ -902,7 +902,7 @@ async function manualSync() {
 async function pushToServer(newQuote) {
   try {
     // Post data to server using mock API
-    const response = await fetch(`${SERVER_CONFIG.baseUrl}/posts`, {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
