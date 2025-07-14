@@ -121,6 +121,27 @@
       color: #666;
       font-style: italic;
     }
+    
+    .sync-info {
+      background: #e7f3ff;
+      border: 1px solid #b3d7ff;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+      text-align: center;
+    }
+    
+    .sync-info h4 {
+      color: #0056b3;
+      margin: 0 0 10px 0;
+      font-size: 1em;
+    }
+    
+    .sync-info p {
+      color: #0056b3;
+      margin: 5px 0;
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
@@ -140,10 +161,18 @@
   <div class="button-container">
     <button id="newQuote">Show New Quote</button>
     <button id="toggleForm">Add New Quote</button>
+    <button id="manualSync" onclick="manualSync()" style="background-color: #17a2b8;">🔄 Sync Now</button>
   </div>
   
   <div class="storage-info">
     <p><small><strong>Note:</strong> Your quotes are automatically saved locally and will persist between browser sessions.</small></p>
+  </div>
+  
+  <div class="sync-info">
+    <h4>🌐 Server Sync Enabled</h4>
+    <p>• Automatically syncs with server every 30 seconds</p>
+    <p>• Handles conflicts by prioritizing server data</p>
+    <p>• Click "🔄 Sync Now" for manual synchronization</p>
   </div>
   
   <div class="form-container">

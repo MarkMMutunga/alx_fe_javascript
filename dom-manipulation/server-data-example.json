@@ -1,0 +1,23 @@
+[
+  {
+    "id": "server_1",
+    "text": "Success is not final, failure is not fatal, it is the courage to continue that counts.",
+    "category": "motivation",
+    "source": "server",
+    "timestamp": 1647875400000
+  },
+  {
+    "id": "server_2", 
+    "text": "The only way to do great work is to love what you do.",
+    "category": "inspiration",
+    "source": "server",
+    "timestamp": 1647875500000
+  },
+  {
+    "id": "server_3",
+    "text": "Innovation distinguishes between a leader and a follower.",
+    "category": "leadership",
+    "source": "server", 
+    "timestamp": 1647875600000
+  }
+]
