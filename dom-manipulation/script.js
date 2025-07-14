@@ -1,5 +1,5 @@
-// Array of quote objects with text and category
-let quotes = [
+// Default quotes array
+const defaultQuotes = [
   {
     text: "The only way to do great work is to love what you do.",
     category: "motivation"
@@ -34,6 +34,9 @@ let quotes = [
   }
 ];
 
+// Initialize quotes array - load from localStorage or use defaults
+let quotes = loadQuotes();
+
 // DOM elements
 const quoteDisplay = document.getElementById('quoteDisplay');
 const newQuoteBtn = document.getElementById('newQuote');
@@ -47,6 +50,7 @@ let currentFormVisible = false;
 document.addEventListener('DOMContentLoaded', function() {
   populateCategoryFilter();
   setupEventListeners();
+  loadLastViewedQuote();
   showRandomQuote();
 });
 
@@ -70,6 +74,9 @@ function showRandomQuote() {
   const randomQuote = filteredQuotes[randomIndex];
   
   displayQuote(randomQuote.text, randomQuote.category);
+  
+  // Save the last viewed quote to session storage
+  saveLastViewedQuote(randomQuote);
 }
 
 // Function to display a quote with animation
@@ -232,6 +239,9 @@ function addQuote() {
   // Add to quotes array
   quotes.push(newQuote);
   
+  // Save quotes to localStorage
+  saveQuotes();
+  
   // Update category filter
   populateCategoryFilter();
   
@@ -318,10 +328,13 @@ function setupEventListeners() {
   // Category filter change
   categoryFilter.addEventListener('change', showRandomQuote);
   
+  // Create import/export controls
+  createImportExportControls();
+  
   // Keyboard shortcuts
   document.addEventListener('keydown', function(event) {
     // Space bar for new quote
-    if (event.code === 'Space' && !event.target.matches('input')) {
+    if (event.code === 'Space' && !event.target.matches('input') && !event.target.matches('select')) {
       event.preventDefault();
       showRandomQuote();
     }
@@ -330,6 +343,12 @@ function setupEventListeners() {
     if (event.key === 'a' && event.ctrlKey) {
       event.preventDefault();
       createAddQuoteForm();
+    }
+    
+    // 'E' key to export quotes
+    if (event.key === 'e' && event.ctrlKey) {
+      event.preventDefault();
+      exportToJsonFile();
     }
     
     // Escape key to close form
@@ -347,4 +366,254 @@ if (typeof module !== 'undefined' && module.exports) {
     addQuote,
     quotes
   };
+}
+
+// Web Storage Functions
+function saveQuotes() {
+  try {
+    localStorage.setItem('quotes', JSON.stringify(quotes));
+  } catch (error) {
+    console.error('Error saving quotes to localStorage:', error);
+    showErrorMessage('Failed to save quotes to local storage');
+  }
+}
+
+function loadQuotes() {
+  try {
+    const savedQuotes = localStorage.getItem('quotes');
+    if (savedQuotes) {
+      const parsedQuotes = JSON.parse(savedQuotes);
+      // Validate that the loaded data is an array
+      if (Array.isArray(parsedQuotes) && parsedQuotes.length > 0) {
+        return parsedQuotes;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading quotes from localStorage:', error);
+    showErrorMessage('Failed to load quotes from local storage');
+  }
+  // Return default quotes if loading fails or no quotes exist
+  return [...defaultQuotes];
+}
+
+function saveLastViewedQuote(quote) {
+  try {
+    sessionStorage.setItem('lastViewedQuote', JSON.stringify(quote));
+  } catch (error) {
+    console.error('Error saving last viewed quote to sessionStorage:', error);
+  }
+}
+
+function loadLastViewedQuote() {
+  try {
+    const lastQuote = sessionStorage.getItem('lastViewedQuote');
+    if (lastQuote) {
+      const parsedQuote = JSON.parse(lastQuote);
+      // Display the last viewed quote if it exists
+      if (parsedQuote.text && parsedQuote.category) {
+        displayQuote(parsedQuote.text, parsedQuote.category);
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading last viewed quote from sessionStorage:', error);
+  }
+  return false;
+}
+
+// JSON Import/Export Functions
+function exportToJsonFile() {
+  try {
+    const dataStr = JSON.stringify(quotes, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = 'quotes.json';
+    downloadLink.style.display = 'none';
+    
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    
+    // Clean up the URL object
+    URL.revokeObjectURL(url);
+    
+    showSuccessMessage('Quotes exported successfully!');
+  } catch (error) {
+    console.error('Error exporting quotes:', error);
+    showErrorMessage('Failed to export quotes');
+  }
+}
+
+function importFromJsonFile(event) {
+  const file = event.target.files[0];
+  if (!file) {
+    return;
+  }
+  
+  const fileReader = new FileReader();
+  fileReader.onload = function(event) {
+    try {
+      const importedQuotes = JSON.parse(event.target.result);
+      
+      // Validate imported data
+      if (!Array.isArray(importedQuotes)) {
+        throw new Error('Invalid file format: Expected an array of quotes');
+      }
+      
+      // Validate each quote object
+      const validQuotes = importedQuotes.filter(quote => {
+        return quote && 
+               typeof quote.text === 'string' && 
+               typeof quote.category === 'string' &&
+               quote.text.trim() !== '' &&
+               quote.category.trim() !== '';
+      });
+      
+      if (validQuotes.length === 0) {
+        throw new Error('No valid quotes found in the file');
+      }
+      
+      // Add imported quotes to existing quotes
+      quotes.push(...validQuotes);
+      
+      // Save to localStorage
+      saveQuotes();
+      
+      // Update UI
+      populateCategoryFilter();
+      
+      // Clear the file input
+      event.target.value = '';
+      
+      showSuccessMessage(`${validQuotes.length} quotes imported successfully!`);
+      
+      // Show a newly imported quote
+      if (validQuotes.length > 0) {
+        const randomImported = validQuotes[Math.floor(Math.random() * validQuotes.length)];
+        displayQuote(randomImported.text, randomImported.category);
+      }
+      
+    } catch (error) {
+      console.error('Error importing quotes:', error);
+      showErrorMessage(`Failed to import quotes: ${error.message}`);
+      // Clear the file input on error
+      event.target.value = '';
+    }
+  };
+  
+  fileReader.onerror = function() {
+    showErrorMessage('Failed to read the file');
+    event.target.value = '';
+  };
+  
+  fileReader.readAsText(file);
+}
+
+function showErrorMessage(message) {
+  const errorDiv = document.createElement('div');
+  errorDiv.textContent = message;
+  errorDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #dc3545;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  `;
+  
+  document.body.appendChild(errorDiv);
+  
+  // Show with animation
+  setTimeout(() => {
+    errorDiv.style.opacity = '1';
+  }, 100);
+  
+  // Hide after 5 seconds
+  setTimeout(() => {
+    errorDiv.style.opacity = '0';
+    setTimeout(() => {
+      if (errorDiv.parentNode) {
+        errorDiv.parentNode.removeChild(errorDiv);
+      }
+    }, 300);
+  }, 5000);
+}
+
+function createImportExportControls() {
+  // Check if controls already exist
+  if (document.getElementById('importExportControls')) {
+    return;
+  }
+  
+  // Create container
+  const controlsContainer = document.createElement('div');
+  controlsContainer.id = 'importExportControls';
+  controlsContainer.className = 'form-container';
+  controlsContainer.style.marginTop = '20px';
+  
+  // Create title
+  const title = document.createElement('h3');
+  title.textContent = 'Import/Export Quotes';
+  title.style.textAlign = 'center';
+  title.style.marginBottom = '20px';
+  title.style.color = '#333';
+  
+  // Create export button
+  const exportButton = document.createElement('button');
+  exportButton.textContent = 'Export Quotes to JSON';
+  exportButton.onclick = exportToJsonFile;
+  exportButton.style.width = '100%';
+  exportButton.style.marginBottom = '10px';
+  exportButton.style.backgroundColor = '#28a745';
+  
+  exportButton.addEventListener('mouseenter', function() {
+    this.style.backgroundColor = '#218838';
+  });
+  
+  exportButton.addEventListener('mouseleave', function() {
+    this.style.backgroundColor = '#28a745';
+  });
+  
+  // Create import section
+  const importLabel = document.createElement('label');
+  importLabel.textContent = 'Import Quotes from JSON file:';
+  importLabel.style.display = 'block';
+  importLabel.style.marginBottom = '10px';
+  importLabel.style.fontWeight = 'bold';
+  
+  const importInput = document.createElement('input');
+  importInput.type = 'file';
+  importInput.id = 'importFile';
+  importInput.accept = '.json';
+  importInput.onchange = importFromJsonFile;
+  importInput.style.width = '100%';
+  importInput.style.padding = '10px';
+  importInput.style.border = '2px dashed #007bff';
+  importInput.style.borderRadius = '5px';
+  importInput.style.backgroundColor = '#f8f9fa';
+  
+  // Create info text
+  const infoText = document.createElement('p');
+  infoText.innerHTML = '<small><strong>Note:</strong> Import will add quotes to your existing collection. Export saves all current quotes to a JSON file.</small>';
+  infoText.style.color = '#666';
+  infoText.style.marginTop = '15px';
+  infoText.style.fontSize = '0.9em';
+  
+  // Assemble the controls
+  controlsContainer.appendChild(title);
+  controlsContainer.appendChild(exportButton);
+  controlsContainer.appendChild(importLabel);
+  controlsContainer.appendChild(importInput);
+  controlsContainer.appendChild(infoText);
+  
+  // Add to page
+  document.body.appendChild(controlsContainer);
 }
