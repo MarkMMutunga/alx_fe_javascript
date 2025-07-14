@@ -42,6 +42,8 @@ const quoteDisplay = document.getElementById('quoteDisplay');
 const newQuoteBtn = document.getElementById('newQuote');
 const toggleFormBtn = document.getElementById('toggleForm');
 const categoryFilter = document.getElementById('categoryFilter');
+const exportBtn = document.getElementById('exportQuotes');
+const importFileInput = document.getElementById('importFile');
 
 // State variables
 let currentFormVisible = false;
@@ -328,8 +330,10 @@ function setupEventListeners() {
   // Category filter change
   categoryFilter.addEventListener('change', showRandomQuote);
   
-  // Create import/export controls
-  createImportExportControls();
+  // Export button
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportToJsonFile);
+  }
   
   // Keyboard shortcuts
   document.addEventListener('keydown', function(event) {
@@ -545,75 +549,4 @@ function showErrorMessage(message) {
       }
     }, 300);
   }, 5000);
-}
-
-function createImportExportControls() {
-  // Check if controls already exist
-  if (document.getElementById('importExportControls')) {
-    return;
-  }
-  
-  // Create container
-  const controlsContainer = document.createElement('div');
-  controlsContainer.id = 'importExportControls';
-  controlsContainer.className = 'form-container';
-  controlsContainer.style.marginTop = '20px';
-  
-  // Create title
-  const title = document.createElement('h3');
-  title.textContent = 'Import/Export Quotes';
-  title.style.textAlign = 'center';
-  title.style.marginBottom = '20px';
-  title.style.color = '#333';
-  
-  // Create export button
-  const exportButton = document.createElement('button');
-  exportButton.textContent = 'Export Quotes to JSON';
-  exportButton.onclick = exportToJsonFile;
-  exportButton.style.width = '100%';
-  exportButton.style.marginBottom = '10px';
-  exportButton.style.backgroundColor = '#28a745';
-  
-  exportButton.addEventListener('mouseenter', function() {
-    this.style.backgroundColor = '#218838';
-  });
-  
-  exportButton.addEventListener('mouseleave', function() {
-    this.style.backgroundColor = '#28a745';
-  });
-  
-  // Create import section
-  const importLabel = document.createElement('label');
-  importLabel.textContent = 'Import Quotes from JSON file:';
-  importLabel.style.display = 'block';
-  importLabel.style.marginBottom = '10px';
-  importLabel.style.fontWeight = 'bold';
-  
-  const importInput = document.createElement('input');
-  importInput.type = 'file';
-  importInput.id = 'importFile';
-  importInput.accept = '.json';
-  importInput.onchange = importFromJsonFile;
-  importInput.style.width = '100%';
-  importInput.style.padding = '10px';
-  importInput.style.border = '2px dashed #007bff';
-  importInput.style.borderRadius = '5px';
-  importInput.style.backgroundColor = '#f8f9fa';
-  
-  // Create info text
-  const infoText = document.createElement('p');
-  infoText.innerHTML = '<small><strong>Note:</strong> Import will add quotes to your existing collection. Export saves all current quotes to a JSON file.</small>';
-  infoText.style.color = '#666';
-  infoText.style.marginTop = '15px';
-  infoText.style.fontSize = '0.9em';
-  
-  // Assemble the controls
-  controlsContainer.appendChild(title);
-  controlsContainer.appendChild(exportButton);
-  controlsContainer.appendChild(importLabel);
-  controlsContainer.appendChild(importInput);
-  controlsContainer.appendChild(infoText);
-  
-  // Add to page
-  document.body.appendChild(controlsContainer);
 }
